@@ -262,10 +262,6 @@ public class HttpServerPlugin extends Plugin
 	{
 		Player player = client.getLocalPlayer();
 		JsonArray items = new JsonArray();
-		JsonObject headers = new JsonObject();
-		headers.addProperty("username", client.getUsername());
-		headers.addProperty("player name", player.getName());
-		items.add(headers);
 
 		List<BankItem> bankItems = bank.getItems();
 		for(BankItem bankItem : bankItems)
