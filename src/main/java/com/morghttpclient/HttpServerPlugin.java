@@ -1,5 +1,6 @@
 package com.morghttpclient;
 
+import com.morghttpclient.pojos.BankItem;
 import net.runelite.api.events.ChatMessage;
 import com.google.inject.Provides;
 import net.runelite.api.events.GameTick;
@@ -11,6 +12,7 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -21,6 +23,7 @@ import net.runelite.api.*;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.http.api.RuneLiteAPI;
@@ -39,11 +42,14 @@ public class HttpServerPlugin extends Plugin
 	public Client client;
 	public Skill[] skillList;
 	public XpTracker xpTracker;
+	public Bank bank;
 	public Skill mostRecentSkillGained;
 	public int tickCount = 0;
 	public long startTime = 0;
 	public long currentTime = 0;
 	public int[] xp_gained_skills;
+	@Inject
+	private ItemManager itemManager;
 	@Inject
 	public HttpServerConfig config;
 	@Inject
@@ -63,11 +69,13 @@ public class HttpServerPlugin extends Plugin
 		//MAX_DISTANCE = config.reachedDistance();
 		skillList = Skill.values();
 		xpTracker = new XpTracker(this);
+		bank = new Bank(client);
 		server = HttpServer.create(new InetSocketAddress(8081), 0);
 		server.createContext("/stats", this::handleStats);
 		server.createContext("/inv", handlerForInv(InventoryID.INVENTORY));
 		server.createContext("/equip", handlerForInv(InventoryID.EQUIPMENT));
 		server.createContext("/events", this::handleEvents);
+		server.createContext("/bank", this::handleBank);
 		server.setExecutor(Executors.newSingleThreadExecutor());
 		startTime = System.currentTimeMillis();
 		xp_gained_skills = new int[Skill.values().length];
@@ -103,6 +111,8 @@ public class HttpServerPlugin extends Plugin
 	{
 		currentTime = System.currentTimeMillis();
 		xpTracker.update();
+		bank.handleBankWindow();
+
 		int skill_count = 0;
 		for (Skill skill : Skill.values())
 		{
@@ -247,6 +257,32 @@ public class HttpServerPlugin extends Plugin
 			RuneLiteAPI.GSON.toJson(object, out);
 		}
 	}
+
+	public void handleBank(HttpExchange exchange) throws IOException
+	{
+		Player player = client.getLocalPlayer();
+		JsonArray items = new JsonArray();
+		JsonObject headers = new JsonObject();
+		headers.addProperty("username", client.getUsername());
+		headers.addProperty("player name", player.getName());
+		items.add(headers);
+
+		List<BankItem> bankItems = bank.getItems();
+		for(BankItem bankItem : bankItems)
+		{
+			JsonObject object = new JsonObject();
+			object.addProperty("id", bankItem.getId());
+			object.addProperty("quantity", bankItem.getQuantity());
+			items.add(object);
+		}
+
+		exchange.sendResponseHeaders(200, 0);
+		try (OutputStreamWriter out = new OutputStreamWriter(exchange.getResponseBody()))
+		{
+			RuneLiteAPI.GSON.toJson(items, out);
+		}
+	}
+
 	private HttpHandler handlerForInv(InventoryID inventoryID)
 	{
 		return exchange -> {
