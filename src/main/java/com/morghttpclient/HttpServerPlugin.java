@@ -1,6 +1,8 @@
 package com.morghttpclient;
 
 import com.morghttpclient.pojos.BankItem;
+import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ChatMessage;
 import com.google.inject.Provides;
 import net.runelite.api.events.GameTick;
@@ -237,7 +239,7 @@ public class HttpServerPlugin extends Plugin
 		worldPoint.addProperty("x", player.getWorldLocation().getX());
 		worldPoint.addProperty("y", player.getWorldLocation().getY());
 		worldPoint.addProperty("plane", player.getWorldLocation().getPlane());
-		worldPoint.addProperty("regionID", player.getWorldLocation().getRegionID());
+		worldPoint.addProperty("regionID", getRegionIDs());
 		worldPoint.addProperty("regionX", player.getWorldLocation().getRegionX());
 		worldPoint.addProperty("regionY", player.getWorldLocation().getRegionY());
 		camera.addProperty("yaw", client.getCameraYaw());
@@ -257,7 +259,34 @@ public class HttpServerPlugin extends Plugin
 			RuneLiteAPI.GSON.toJson(object, out);
 		}
 	}
+	public int getRegionIDs(){
+		Player localPlayer = client.getLocalPlayer();
+		if (localPlayer == null) {
+			// Handle the case where there is no player information available
+			return 0;
+		}
 
+
+		WorldPoint wp = localPlayer.getWorldLocation();
+		int tileX = wp.getX();
+		int tileY = wp.getY();
+		int z = client.getPlane();
+
+// Check if the player is in an instanced area and adjust coordinates
+		if (client.isInInstancedRegion()) {
+			int[][][] instanceTemplateChunks = client.getInstanceTemplateChunks();
+			LocalPoint localPoint = localPlayer.getLocalLocation();
+			int chunkData = instanceTemplateChunks[z][localPoint.getSceneX() / 8][localPoint.getSceneY() / 8];
+
+			tileX = (chunkData >> 14 & 0x3FF) * 8 + (tileX % 8);
+			tileY = (chunkData >> 3 & 0x7FF) * 8 + (tileY % 8);
+		}
+
+		int regionX = tileX / 64;
+		int regionY = tileY / 64;
+		int regionID = (regionX << 8) | regionY;
+		return regionID;
+	}
 	public void handleBank(HttpExchange exchange) throws IOException
 	{
 		Player player = client.getLocalPlayer();
