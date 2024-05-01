@@ -127,6 +127,25 @@ public class HttpServerPlugin extends Plugin
 			skill_count ++;
 		}
 		tickCount++;
+		// New code for retrieving and sending NPC data
+		List<NPC> npcs = client.getNpcs();
+		JsonArray npcDataArray = new JsonArray();
+		Rectangle gameView = client.getCanvas().getBounds();
+
+		for (NPC npc : npcs) {
+			JsonObject npcData = new JsonObject();
+			npcData.addProperty("id", npc.getId());
+			npcData.addProperty("name", npc.getName());
+
+			Point canvasPosition = Perspective.localToCanvas(client, npc.getLocalLocation(), client.getPlane());
+			if (canvasPosition != null && gameView.contains(canvasPosition.getX(), canvasPosition.getY())) {
+				npcData.addProperty("canvasX", canvasPosition.getX());
+				npcData.addProperty("canvasY", canvasPosition.getY());
+				npcDataArray.add(npcData);
+			}
+		}
+
+		System.out.println(npcDataArray);
 
 	}
 
