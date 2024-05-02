@@ -45,6 +45,7 @@ public class HttpServerPlugin extends Plugin
 	public Skill[] skillList;
 	public XpTracker xpTracker;
 	public Bank bank;
+	public NpcTracker npcTracker;
 	public Skill mostRecentSkillGained;
 	public int tickCount = 0;
 	public long startTime = 0;
@@ -72,12 +73,14 @@ public class HttpServerPlugin extends Plugin
 		skillList = Skill.values();
 		xpTracker = new XpTracker(this);
 		bank = new Bank(client);
+		npcTracker = new NpcTracker(client);
 		server = HttpServer.create(new InetSocketAddress(8081), 0);
 		server.createContext("/stats", this::handleStats);
 		server.createContext("/inv", handlerForInv(InventoryID.INVENTORY));
 		server.createContext("/equip", handlerForInv(InventoryID.EQUIPMENT));
 		server.createContext("/events", this::handleEvents);
 		server.createContext("/bank", this::handleBank);
+		server.createContext("/npcs", this::handleNpcs);
 		server.setExecutor(Executors.newSingleThreadExecutor());
 		startTime = System.currentTimeMillis();
 		xp_gained_skills = new int[Skill.values().length];
@@ -127,26 +130,6 @@ public class HttpServerPlugin extends Plugin
 			skill_count ++;
 		}
 		tickCount++;
-		// New code for retrieving and sending NPC data
-		List<NPC> npcs = client.getNpcs();
-		JsonArray npcDataArray = new JsonArray();
-		Rectangle gameView = client.getCanvas().getBounds();
-
-		for (NPC npc : npcs) {
-			JsonObject npcData = new JsonObject();
-			npcData.addProperty("id", npc.getId());
-			npcData.addProperty("name", npc.getName());
-
-			Point canvasPosition = Perspective.localToCanvas(client, npc.getLocalLocation(), client.getPlane());
-			if (canvasPosition != null && gameView.contains(canvasPosition.getX(), canvasPosition.getY())) {
-				npcData.addProperty("canvasX", canvasPosition.getX());
-				npcData.addProperty("canvasY", canvasPosition.getY());
-				npcDataArray.add(npcData);
-			}
-		}
-
-		System.out.println(npcDataArray);
-
 	}
 
 	public int handleTracker(Skill skill){
@@ -324,6 +307,17 @@ public class HttpServerPlugin extends Plugin
 		try (OutputStreamWriter out = new OutputStreamWriter(exchange.getResponseBody()))
 		{
 			RuneLiteAPI.GSON.toJson(items, out);
+		}
+	}
+
+	public void handleNpcs(HttpExchange exchange) throws IOException
+	{
+		JsonArray visibleNpcs = npcTracker.getVisibleNpcs();
+
+		exchange.sendResponseHeaders(200, 0);
+		try (OutputStreamWriter out = new OutputStreamWriter(exchange.getResponseBody()))
+		{
+			RuneLiteAPI.GSON.toJson(visibleNpcs, out);
 		}
 	}
 
