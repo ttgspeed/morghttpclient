@@ -29,11 +29,15 @@ public class NpcTracker {
             JsonObject npcData = new JsonObject();
             npcData.addProperty("id", npc.getId());
             npcData.addProperty("name", npc.getName());
-
-            Point canvasPosition = Perspective.localToCanvas(client, npc.getLocalLocation(), client.getPlane());
+			Point canvasPosition = Perspective.localToCanvas(client, npc.getLocalLocation(), client.getPlane());
+			LocalPoint worldLocation = npc.getLocalLocation();
+			int plane = client.getPlane();  // Retrieves the plane level the NPC is on
             if (canvasPosition != null && gameView.contains(canvasPosition.getX(), canvasPosition.getY())) {
                 npcData.addProperty("canvasX", canvasPosition.getX());
                 npcData.addProperty("canvasY", canvasPosition.getY());
+                npcData.addProperty("worldX", worldLocation.getX());
+				npcData.addProperty("worldY", worldLocation.getY());
+                npcData.addProperty("plane", plane);
                 visibleNpcs.add(npcData);
             }
         }
