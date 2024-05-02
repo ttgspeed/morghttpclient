@@ -36,7 +36,7 @@ public class NpcTracker {
                 npcData.addProperty("canvasX", canvasPosition.getX());
                 npcData.addProperty("canvasY", canvasPosition.getY());
                 npcData.addProperty("worldX", worldLocation.getX());
-				npcData.addProperty("worldY", worldLocation.getY());
+		npcData.addProperty("worldY", worldLocation.getY());
                 npcData.addProperty("plane", plane);
                 visibleNpcs.add(npcData);
             }
