@@ -130,6 +130,21 @@ public class HttpServerPlugin extends Plugin
 			skill_count ++;
 		}
 		tickCount++;
+		Scene scene = client.getScene();
+		Tile[][][] tiles = scene.getTiles();
+		int z = client.getPlane();
+		Rectangle viewport = getViewport(client);
+
+		for (int x = 0; x < Constants.SCENE_SIZE; x++) {
+			for (int y = 0; y < Constants.SCENE_SIZE; y++) {
+				Tile tile = tiles[z][x][y];
+				if (tile == null) continue;
+
+				processGameObjects(tile.getGameObjects(), viewport);
+				processTileObject(tile.getDecorativeObject(), viewport);
+				processTileObject(tile.getWallObject(), viewport);
+			}
+		}
 	}
 
 	public int handleTracker(Skill skill){
@@ -375,4 +390,42 @@ public class HttpServerPlugin extends Plugin
 			throw new RuntimeException(e);
 		}
 	}
+	
+	private void processGameObjects(GameObject[] gameObjects, Rectangle viewport) {
+		if (gameObjects == null) return;
+		for (GameObject gameObject : gameObjects) {
+			if (gameObject != null && isObjectVisible(gameObject, viewport)) {
+				logObject("GameObject", gameObject);
+			}
+		}
+	}
+
+	private void processTileObject(TileObject tileObject, Rectangle viewport) {
+		if (tileObject != null && isObjectVisible(tileObject, viewport)) {
+			logObject("TileObject", tileObject);
+		}
+	}
+
+	private boolean isObjectVisible(TileObject object, Rectangle viewport) {
+		Point canvasPoint = Perspective.localToCanvas(client, object.getLocalLocation(), client.getPlane());
+		if (canvasPoint != null && viewport.contains(canvasPoint.getX(), canvasPoint.getY())) {
+			return true;
+		}
+		return false;
+	}
+
+	private Rectangle getViewport(Client client) {
+		// This method needs to be implemented to return the current viewport rectangle based on the camera and zoom.
+		// Placeholder for demonstration.
+		return new Rectangle(0, 0, client.getCanvasWidth(), client.getCanvasHeight());
+	}
+
+	private void logObject(String type, TileObject object) {
+
+		Point canvasPoint = Perspective.localToCanvas(client, object.getLocalLocation(), client.getPlane());
+		if (canvasPoint != null) {
+			System.out.println(type + " ID: " + object.getId() + ", CanvasX: " + canvasPoint.getX() + ", CanvasY: " + canvasPoint.getY());
+		}
+	}
+
 }
