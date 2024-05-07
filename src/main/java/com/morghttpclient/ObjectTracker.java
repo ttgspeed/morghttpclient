@@ -21,12 +21,13 @@ public class ObjectTracker {
 
     public ObjectTracker(Client client) {
         this.client = client;
+    }
+
+    public JsonObject getVisibleObjects(){
         this.visibleGameObjects = new JsonArray();
         this.visibleDecorativeObjects = new JsonArray();
         this.visibleWallObjects = new JsonArray();
-    }
 
-    public JsonArray getVisibleObjects(){
         Scene scene = client.getScene();
         Tile[][][] tiles = scene.getTiles();
         int z = client.getPlane();
@@ -43,16 +44,12 @@ public class ObjectTracker {
             }
         }
 
-        JsonArray visibleObjects = new JsonArray();
-
         JsonObject objectData = new JsonObject();
         objectData.add("GameObjects", this.visibleGameObjects);
         objectData.add("DecorativeObjects", this.visibleDecorativeObjects);
         objectData.add("WallObjects", this.visibleWallObjects);
 
-        visibleObjects.add(objectData);
-
-        return visibleObjects;
+        return objectData;
     }
 
     private void processGameObjects(GameObject[] gameObjects, Rectangle viewport) {

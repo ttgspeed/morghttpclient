@@ -326,7 +326,7 @@ public class HttpServerPlugin extends Plugin
 
 	public void handleObjects(HttpExchange exchange) throws IOException
 	{
-		JsonArray visibleObjects = objectTracker.getVisibleObjects();
+		JsonObject visibleObjects = objectTracker.getVisibleObjects();
 
 		exchange.sendResponseHeaders(200, 0);
 		try (OutputStreamWriter out = new OutputStreamWriter(exchange.getResponseBody()))
