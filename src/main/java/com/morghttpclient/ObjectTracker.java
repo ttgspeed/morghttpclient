@@ -58,12 +58,22 @@ public class ObjectTracker {
             if (gameObject != null && isObjectVisible(gameObject, viewport)) {
                 logObject("GameObject", gameObject);
 
-                JsonObject objectData = new JsonObject();
-                objectData.addProperty("id", gameObject.getId());
-                objectData.addProperty("canvasX", gameObject.getCanvasLocation().getX());
-                objectData.addProperty("canvasY", gameObject.getCanvasLocation().getY());
-                if(objectData.size() > 0)
-                    this.visibleGameObjects.add(objectData);
+                // Get the clickbox and calculate the center
+                Shape clickbox = gameObject.getConvexHull();
+                if (clickbox != null) {
+                    Rectangle bounds = clickbox.getBounds();
+
+                    int centerX = bounds.x + bounds.width / 2;
+                    int centerY = bounds.y + bounds.height / 2;
+
+                    JsonObject objectData = new JsonObject();
+                    objectData.addProperty("id", gameObject.getId());
+                    objectData.addProperty("canvasX", centerX);
+                    objectData.addProperty("canvasY", centerY);
+
+                    if (objectData.size() > 0)
+                        this.visibleGameObjects.add(objectData);
+                }
             }
         }
     }
