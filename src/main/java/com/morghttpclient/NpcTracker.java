@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import net.runelite.api.*;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,10 @@ public class NpcTracker {
                     npcData.addProperty("canvasX", centerX);
                     npcData.addProperty("canvasY", centerY);
 
-                    LocalPoint worldLocation = npc.getLocalLocation();
+                    WorldPoint worldLocation = client.isInInstancedRegion()?
+                            WorldPoint.fromLocalInstance(client, npc.getLocalLocation()):
+                            WorldPoint.fromLocal(client, npc.getLocalLocation());
+
                     npcData.addProperty("worldX", worldLocation.getX());
                     npcData.addProperty("worldY", worldLocation.getY());
                     npcData.addProperty("plane", client.getPlane());

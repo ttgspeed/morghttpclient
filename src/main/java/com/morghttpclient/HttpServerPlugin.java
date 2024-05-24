@@ -186,45 +186,50 @@ public class HttpServerPlugin extends Plugin
 		int minHealth = 0;
 		int maxHealth = 0;
 		if (npc != null)
-	{
-		npcName = npc.getName();
-		npcHealth = npc.getHealthScale();
-		npcHealth2 = npc.getHealthRatio();
-		health = 0;
-		if (npcHealth2 > 0)
 		{
-			minHealth = 1;
-			if (npcHealth > 1)
+			npcName = npc.getName();
+			npcHealth = npc.getHealthScale();
+			npcHealth2 = npc.getHealthRatio();
+			health = 0;
+			if (npcHealth2 > 0)
 			{
-				if (npcHealth2 > 1)
+				minHealth = 1;
+				if (npcHealth > 1)
 				{
-					// This doesn't apply if healthRatio = 1, because of the special case in the server calculation that
-					// health = 0 forces healthRatio = 0 instead of the expected healthRatio = 1
-					minHealth = (npcHealth * (npcHealth2 - 1) + npcHealth - 2) / (npcHealth- 1);
+					if (npcHealth2 > 1)
+					{
+						// This doesn't apply if healthRatio = 1, because of the special case in the server calculation that
+						// health = 0 forces healthRatio = 0 instead of the expected healthRatio = 1
+						minHealth = (npcHealth * (npcHealth2 - 1) + npcHealth - 2) / (npcHealth- 1);
+					}
+					maxHealth = (npcHealth * npcHealth2 - 1) / (npcHealth- 1);
+					if (maxHealth > npcHealth)
+					{
+						maxHealth = npcHealth;
+					}
 				}
-				maxHealth = (npcHealth * npcHealth2 - 1) / (npcHealth- 1);
-				if (maxHealth > npcHealth)
+				else
 				{
+					// If healthScale is 1, healthRatio will always be 1 unless health = 0
+					// so we know nothing about the upper limit except that it can't be higher than maxHealth
 					maxHealth = npcHealth;
 				}
+				// Take the average of min and max possible healths
+				health = (minHealth + maxHealth + 1) / 2;
 			}
-			else
-			{
-				// If healthScale is 1, healthRatio will always be 1 unless health = 0
-				// so we know nothing about the upper limit except that it can't be higher than maxHealth
-				maxHealth = npcHealth;
-			}
-			// Take the average of min and max possible healths
-			health = (minHealth + maxHealth + 1) / 2;
 		}
-	}
 		else
 		{
 			npcName = "null";
 			npcHealth = 0;
 			npcHealth2 = 0;
 			health = 0;
-	}
+		}
+
+		WorldPoint worldLocation = client.isInInstancedRegion()?
+				WorldPoint.fromLocalInstance(client, player.getLocalLocation()):
+				WorldPoint.fromLocal(client, player.getLocalLocation());
+
 		JsonObject object = new JsonObject();
 		JsonObject camera = new JsonObject();
 		JsonObject worldPoint = new JsonObject();
@@ -241,12 +246,12 @@ public class HttpServerPlugin extends Plugin
 		object.addProperty("MAX_DISTANCE", MAX_DISTANCE);
 		mouse.addProperty("x", client.getMouseCanvasPosition().getX());
 		mouse.addProperty("y", client.getMouseCanvasPosition().getY());
-		worldPoint.addProperty("x", player.getWorldLocation().getX());
-		worldPoint.addProperty("y", player.getWorldLocation().getY());
+		worldPoint.addProperty("x", worldLocation.getX());
+		worldPoint.addProperty("y", worldLocation.getY());
 		worldPoint.addProperty("plane", player.getWorldLocation().getPlane());
 		worldPoint.addProperty("regionID", getRegionIDs());
-		worldPoint.addProperty("regionX", player.getWorldLocation().getRegionX());
-		worldPoint.addProperty("regionY", player.getWorldLocation().getRegionY());
+		worldPoint.addProperty("regionX", worldLocation.getRegionX());
+		worldPoint.addProperty("regionY", worldLocation.getRegionY());
 		camera.addProperty("yaw", client.getCameraYaw());
 		camera.addProperty("pitch", client.getCameraPitch());
 		camera.addProperty("x", client.getCameraX());
