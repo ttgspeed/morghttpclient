@@ -252,9 +252,9 @@ public class HttpServerPlugin extends Plugin
 		camera.addProperty("x", client.getCameraX());
 		camera.addProperty("y", client.getCameraY());
 		camera.addProperty("z", client.getCameraZ());
-		camera.addProperty("x2", client.getCameraFpX());
-		camera.addProperty("y2", client.getCameraFpY());
-		camera.addProperty("z2", client.getCameraFpZ());
+		camera.addProperty("x2", client.getCameraFocalPointX());
+		camera.addProperty("y2", client.getCameraFocalPointY());
+		camera.addProperty("z2", client.getCameraFocalPointZ());
 		object.add("worldPoint", worldPoint);
 		object.add("camera", camera);
 		object.add("mouse", mouse);
@@ -326,7 +326,9 @@ public class HttpServerPlugin extends Plugin
 
 	public void handleObjects(HttpExchange exchange) throws IOException
 	{
-		JsonObject visibleObjects = objectTracker.getVisibleObjects();
+		JsonObject visibleObjects = invokeAndWait(() -> {
+			return objectTracker.getVisibleObjects();
+		});
 
 		exchange.sendResponseHeaders(200, 0);
 		try (OutputStreamWriter out = new OutputStreamWriter(exchange.getResponseBody()))
