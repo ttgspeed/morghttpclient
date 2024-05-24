@@ -25,8 +25,12 @@ public class NpcTracker {
     public JsonArray getVisibleNpcs(){
         List<NPC> npcs = client.getNpcs();
         JsonArray visibleNpcs = new JsonArray();
-        Rectangle gameView = client.getCanvas().getBounds();
-
+        int viewportWidth = client.getViewportWidth();
+        int viewportHeight = client.getViewportHeight();
+        int xOffset = client.getViewportXOffset();
+        int yOffset = client.getViewportYOffset();
+        Rectangle gameView = new Rectangle(xOffset, yOffset, viewportWidth, viewportHeight);
+        
         for (NPC npc : npcs) {
             JsonObject npcData = new JsonObject();
             npcData.addProperty("id", npc.getId());
