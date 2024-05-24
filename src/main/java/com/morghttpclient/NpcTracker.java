@@ -30,16 +30,24 @@ public class NpcTracker {
             JsonObject npcData = new JsonObject();
             npcData.addProperty("id", npc.getId());
             npcData.addProperty("name", npc.getName());
-			Point canvasPosition = Perspective.localToCanvas(client, npc.getLocalLocation(), client.getPlane());
-			LocalPoint worldLocation = npc.getLocalLocation();
-			int plane = client.getPlane();  // Retrieves the plane level the NPC is on
-            if (canvasPosition != null && gameView.contains(canvasPosition.getX(), canvasPosition.getY())) {
-                npcData.addProperty("canvasX", canvasPosition.getX());
-                npcData.addProperty("canvasY", canvasPosition.getY());
-                npcData.addProperty("worldX", worldLocation.getX());
-		npcData.addProperty("worldY", worldLocation.getY());
-                npcData.addProperty("plane", plane);
-                visibleNpcs.add(npcData);
+
+            Shape clickbox = npc.getConvexHull();
+            if (clickbox != null) {
+                Rectangle bounds = clickbox.getBounds();
+                int centerX = bounds.x + bounds.width / 2;
+                int centerY = bounds.y + bounds.height / 2;
+
+                // Check if the center of the convex hull is within the game view
+                if (gameView.contains(centerX, centerY)) {
+                    npcData.addProperty("canvasX", centerX);
+                    npcData.addProperty("canvasY", centerY);
+
+                    LocalPoint worldLocation = npc.getLocalLocation();
+                    npcData.addProperty("worldX", worldLocation.getX());
+                    npcData.addProperty("worldY", worldLocation.getY());
+                    npcData.addProperty("plane", client.getPlane());
+                    visibleNpcs.add(npcData);
+                }
             }
         }
 
