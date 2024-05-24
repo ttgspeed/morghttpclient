@@ -31,7 +31,11 @@ public class ObjectTracker {
         Scene scene = client.getScene();
         Tile[][][] tiles = scene.getTiles();
         int z = client.getPlane();
-        Rectangle gameView = client.getCanvas().getBounds();
+        int viewportWidth = client.getViewportWidth();
+        int viewportHeight = client.getViewportHeight();
+        int xOffset = client.getViewportXOffset();
+        int yOffset = client.getViewportYOffset();
+        Rectangle gameView = new Rectangle(xOffset, yOffset, viewportWidth, viewportHeight);
 
         for (int x = 0; x < Constants.SCENE_SIZE; x++) {
             for (int y = 0; y < Constants.SCENE_SIZE; y++) {
