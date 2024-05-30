@@ -29,6 +29,8 @@ import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.http.api.RuneLiteAPI;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetInfo;
 
 @PluginDescriptor(
 	name = "Morg HTTP Client",
@@ -234,6 +236,7 @@ public class HttpServerPlugin extends Plugin
 		JsonObject camera = new JsonObject();
 		JsonObject worldPoint = new JsonObject();
 		JsonObject mouse = new JsonObject();
+		JsonObject minimap = new JsonObject();
 		object.addProperty("animation", player.getAnimation());
 		object.addProperty("animation pose", player.getPoseAnimation());
 		object.addProperty("latest msg", msg);
@@ -252,7 +255,7 @@ public class HttpServerPlugin extends Plugin
 		worldPoint.addProperty("regionID", getRegionIDs());
 		worldPoint.addProperty("regionX", worldLocation.getRegionX());
 		worldPoint.addProperty("regionY", worldLocation.getRegionY());
-		camera.addProperty("yaw", client.getCameraYaw());
+		camera.addProperty("yaw", client.getCameraYawTarget() & 2047);
 		camera.addProperty("pitch", client.getCameraPitch());
 		camera.addProperty("x", client.getCameraX());
 		camera.addProperty("y", client.getCameraY());
@@ -263,6 +266,21 @@ public class HttpServerPlugin extends Plugin
 		object.add("worldPoint", worldPoint);
 		object.add("camera", camera);
 		object.add("mouse", mouse);
+
+		Widget minimap_draw_area_tl = client.isResized()?
+				client.getWidget(10551326): // https://i.imgur.com/TU1DPfG.png
+				client.getWidget(WidgetInfo.FIXED_VIEWPORT_MINIMAP_DRAW_AREA);
+
+		int minimapWidth = minimap_draw_area_tl.getWidth();
+		int minimapHeight = minimap_draw_area_tl.getHeight();
+		int minimapCenterX = minimap_draw_area_tl.getCanvasLocation().getX() + minimapWidth / 2;
+		int minimapCenterY = minimap_draw_area_tl.getCanvasLocation().getY() + minimapHeight / 2;
+
+		minimap.addProperty("minimap_zoom", client.getMinimapZoom());
+		minimap.addProperty("center_x", minimapCenterX);
+		minimap.addProperty("center_y", minimapCenterY);
+		object.add("minimap", minimap);
+
 		exchange.sendResponseHeaders(200, 0);
 		try (OutputStreamWriter out = new OutputStreamWriter(exchange.getResponseBody()))
 		{
