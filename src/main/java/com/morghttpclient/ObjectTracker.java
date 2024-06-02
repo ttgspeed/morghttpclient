@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import net.runelite.api.*;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,10 +71,17 @@ public class ObjectTracker {
                     int centerX = bounds.x + bounds.width / 2;
                     int centerY = bounds.y + bounds.height / 2;
 
+                    WorldPoint worldLocation = client.isInInstancedRegion()?
+                            WorldPoint.fromLocalInstance(client, gameObject.getLocalLocation()):
+                            WorldPoint.fromLocal(client, gameObject.getLocalLocation());
+
                     JsonObject objectData = new JsonObject();
                     objectData.addProperty("id", gameObject.getId());
                     objectData.addProperty("canvasX", centerX);
                     objectData.addProperty("canvasY", centerY);
+                    objectData.addProperty("worldX", worldLocation.getX());
+                    objectData.addProperty("worldY", worldLocation.getY());
+                    objectData.addProperty("plane", worldLocation.getPlane());
 
                     if (objectData.size() > 0)
                         this.visibleGameObjects.add(objectData);
@@ -99,10 +107,16 @@ public class ObjectTracker {
         if (tileObject != null && isObjectVisible(tileObject, viewport)) {
             logObject("TileObject", tileObject);
 
+            WorldPoint worldLocation = client.isInInstancedRegion()?
+                    WorldPoint.fromLocalInstance(client, tileObject.getLocalLocation()):
+                    WorldPoint.fromLocal(client, tileObject.getLocalLocation());
 
             objectData.addProperty("id", tileObject.getId());
             objectData.addProperty("canvasX", tileObject.getCanvasLocation().getX());
             objectData.addProperty("canvasY", tileObject.getCanvasLocation().getY());
+            objectData.addProperty("worldX", worldLocation.getX());
+            objectData.addProperty("worldY", worldLocation.getY());
+            objectData.addProperty("plane", worldLocation.getPlane());
         }
         return objectData;
     }
